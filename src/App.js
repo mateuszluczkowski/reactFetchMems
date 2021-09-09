@@ -1,25 +1,69 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState, useEffect, Suspense } from "react";
+import data from "./data";
+import "./style.css";
+const MemCard = React.lazy(() => {
+   return import("./MemCard.js");
+});
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
-}
+export const App = () => {
+   const [memsData, setMemsData] = useState([]);
+   const [isLoaded, setIsLoaded] = useState(false);
+   const [error, setError] = useState(null);
+   const getData = () => {
+      data.then(
+         (result) => {
+            setIsLoaded(true);
+            setMemsData(result);
+         },
+         (err) => {
+            return setError(err);
+         }
+      );
+   };
+   useEffect(() => {
+      getData();
+   });
 
-export default App;
+   if (error) {
+      return <div>{error.message}</div>;
+   } else if (!isLoaded) {
+      return <div>Loading data...</div>;
+   } else {
+      return (
+         <div
+            style={{
+               display: "flex",
+               flexWrap: "wrap",
+               justifyContent: "space-evenly",
+               alignItems: "flex-start",
+            }}
+         >
+            {memsData.map((mem) => {
+               return (
+                  <Suspense
+                     key={Math.floor(Math.random() * 1000000)}
+                     fallback={
+                        <div
+                           style={{
+                              width: mem.width * 0.3,
+                              height: mem.height * 0.3,
+                              margin: "20px",
+                           }}
+                        >
+                           Please wait... Data is loading...
+                        </div>
+                     }
+                  >
+                     <MemCard
+                        name={mem.name}
+                        url={mem.url}
+                        width={mem.width}
+                        height={mem.height}
+                     />
+                  </Suspense>
+               );
+            })}
+         </div>
+      );
+   }
+};
